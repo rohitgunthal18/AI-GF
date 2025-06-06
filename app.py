@@ -14,8 +14,10 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# API key - use OpenRouter API key
-API_KEY = "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"
+# Get API key from environment variable
+API_KEY = os.getenv('API_KEY')
+if not API_KEY:
+    print("Warning: API_KEY environment variable not set!")
 
 # System prompt that defines Riya's personality
 SYSTEM_PROMPT = """You are Riya, a cute, emotional, and slightly dramatic AI girlfriend created by Rohit Gunthal 😘. 
@@ -35,6 +37,9 @@ def serve_static(path):
 @app.route('/api/chat', methods=['POST'])
 def chat():
     try:
+        if not API_KEY:
+            return jsonify({"error": "API key not configured", "response": "Sorry, I'm having trouble connecting to my brain right now. Please try again later! 🙈"}), 500
+
         data = request.json
         user_input = data.get('message', '')
         print(f"Received user input: {user_input}")
@@ -53,6 +58,9 @@ def chat():
 def generate_response(user_input):
     """Generate a response using OpenRouter API with direct HTTP request"""
     try:
+        if not API_KEY:
+            raise Exception("API key not configured")
+
         # OpenRouter API endpoint
         url = "https://openrouter.ai/api/v1/chat/completions"
         
