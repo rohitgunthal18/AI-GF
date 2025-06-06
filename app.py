@@ -59,8 +59,11 @@ def generate_response(user_input):
     """Generate a response using OpenRouter API with direct HTTP request"""
     try:
         if not API_KEY:
+            print("Error: API_KEY environment variable is not set")
             raise Exception("API key not configured")
-
+        
+        print(f"Using API key starting with: {API_KEY[:10]}...")  # Log first 10 chars of API key
+        
         # OpenRouter API endpoint
         url = "https://openrouter.ai/api/v1/chat/completions"
         
@@ -71,6 +74,8 @@ def generate_response(user_input):
             "X-Title": "Riya Chat Bot",
             "Content-Type": "application/json"
         }
+        
+        print("Request headers:", {k: v[:10] + "..." if k == "Authorization" else v for k, v in headers.items()})
         
         # Request payload
         payload = {
@@ -84,6 +89,11 @@ def generate_response(user_input):
         
         # Make the API request
         response = requests.post(url, headers=headers, json=payload)
+        
+        if response.status_code == 401:
+            print(f"Authentication failed. Response: {response.text}")
+            raise Exception(f"Authentication failed: {response.text}")
+            
         response.raise_for_status()  # Raise an exception for bad status codes
         
         # Parse the response
@@ -92,6 +102,8 @@ def generate_response(user_input):
         
     except Exception as e:
         print(f"Error with API: {str(e)}")
+        if "401" in str(e):
+            print("Authentication error - please check your API key in Railway environment variables")
         # Fallback to hardcoded responses if API fails
         return fallback_response(user_input.lower())
 
